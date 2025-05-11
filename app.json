@@ -1,0 +1,37 @@
+{
+  "manifestVersion": 1,
+  "appID": "cli_a8aa2fa734b8100d",
+  "appType": "docs-addon",
+  "blockTypeID": "blk_682093ba9580c002363b9dc3",
+  "projectName": "ztrans",
+  "contributes": {
+    "topbar": {
+      "view": "index.html",
+      "initialHeight": 100,
+      "initialWidth": 300
+    },
+    "floatCard": {
+      "view": "floatcard.html",
+      "initialHeight": 200
+    },
+    "popup": {
+      "view": "popup.html",
+      "initialHeight": 200
+    },
+    "modal": {
+      "view": "modal.html",
+      "initialHeight": 200
+    }
+  },
+  "environments": {
+    "dev": {
+      "appID": "",
+      "blockTypeID": ""
+    },
+    "prod": {
+      "appID": "cli_a8aa2fa734b8100d",
+      "blockTypeID": "blk_682093ba9580c002363b9dc3"
+    }
+  },
+  "url": "https://zilliverse.feishu.cn/docx/SWB8dWAcGoi6IexKSUKc5f8Pnkh"
+}
