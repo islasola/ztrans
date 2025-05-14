@@ -1,5 +1,4 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import { login, refreshToken, logout } from '../controllers/authController';
 
 const router = express.Router();

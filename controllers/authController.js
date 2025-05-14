@@ -38,10 +38,7 @@ export function login(req, res) {
 }
 
 export function refreshToken(req, res) {
-    console.log('Headers:', req.headers);
-    console.log('Method:', req.method);
-    console.log('Body:', req.body);
-    const { refresh_token } = req.body;
+    const refresh_token = req.body?.refresh_token || undefined;
     if (!refresh_token) {
         return res.status(400).json({ error: 'Refresh token is required' });
     }
@@ -49,24 +46,19 @@ export function refreshToken(req, res) {
     const oauth2 = new AuthorizationCode(config);
     const token = oauth2.createToken({ refresh_token });
 
-    token.refresh((error, result) => {
-        if (error) {
-            console.error('Refresh Token Error', error.message);
-            return res.status(500).json({ error: 'Failed to refresh token' });
-        }
-
-        const { access_token, refresh_token: new_refresh_token, expires_in } = result;
-        res.status(200).json({
-            access_token,
-            refresh_token: new_refresh_token,
-            expires_in,
-            token_type: 'Bearer'
+    token.refresh()
+        .then((result) => {
+             console.log('Refresh Token Success');
+             res.status(200).json(result);
+         })
+        .catch((error) => {
+             console.error('Refresh Token Error', error.data.payload);
+             return res.status(500).json({ error: 'Failed to refresh token' });
         });
-    });
 }
 
 export function logout(req, res) {
-    const { access_token } = req.body;
+    const access_token = req.body?.access_token || undefined;
     if (!access_token) {
         return res.status(400).json({ error: 'Access token is required' });
     }
@@ -74,12 +66,13 @@ export function logout(req, res) {
     const oauth2 = new AuthorizationCode(config);
     const token = oauth2.createToken({ access_token });
 
-    token.revoke('access_token', (error) => {
-        if (error) {
-            console.error('Logout Error', error.message);
-            return res.status(500).json({ error: 'Failed to logout' });
-        }
-
-        res.status(200).json({ message: 'Successfully logged out' });
-    });
+    token.revoke('access_token')
+        .then(() => {
+             console.log('Logout Success');
+             res.status(200).json({ message: 'Successfully logged out' });
+         })
+        .catch((error) => {
+             console.error('Logout Error', error.data.payload);
+             return res.status(500).json({ error: 'Failed to logout' });
+        });
 }
