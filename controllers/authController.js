@@ -1,7 +1,7 @@
 import { AuthorizationCode } from 'simple-oauth2';
 import { config } from '../config/oauthConfig';
 
-import { get_jsapi_ticket } from '../utils/jsapiTicket';
+import { get_jsapi_ticket, sign_jsapi_ticket } from '../utils/jsapiTicket';
 
 export function login(req, res) {
     const code = req.body?.code || undefined;
@@ -31,9 +31,6 @@ export function login(req, res) {
             req.session.refresh_token_expires_at = refresh_token_expires_at;
             req.session.scope = scope;
 
-            // Refresh token if necessary
-            await refreshTokenIfNeeded(req);
-
             // Send a secure response to the client without sensitive data
             const sessionId = req.sessionID;
             res.status(200).json({
@@ -59,42 +56,18 @@ export function logout(req, res) {
     });
 }
 
-
-// Function to refresh token if necessary
-async function refreshTokenIfNeeded(req) {
-    const access_token = req.session.access_token;
-    const refresh_token = req.session.refresh_token;
-    const expires_at = req.session.expires_at;
-    const refresh_token_expires_at = req.session.refresh_token_expires_at;
-
-    if (access_token && expires_at < Date.now()) {
-        // Access token expired, try to refresh it
-        if (refresh_token && refresh_token_expires_at > Date.now()) {
-            const oauth2 = new AuthorizationCode(config);
-            const token = oauth2.createToken({ refresh_token });
-
-            try {
-                const result = await token.refresh();
-                console.log('Refresh Token Success');
-
-                const new_access_token = result.access_token;
-                const new_expires_at = Date.now() + result.expires_in * 1000;
-                const new_refresh_token = result.refresh_token;
-                const new_refresh_token_expires_at = Date.now() + result.refresh_token_expires_in * 1000;
-
-                // Update session with new tokens and expiration times
-                req.session.access_token = new_access_token;
-                req.session.jsapi_ticket = await get_jsapi_ticket(new_access_token);
-                req.session.refresh_token = new_refresh_token;
-                req.session.expires_at = new_expires_at;
-                req.session.refresh_token_expires_at = new_refresh_token_expires_at;
-            } catch (error) {
-                console.error('Refresh Token Error', error.data.payload);
-                throw new Error('Failed to refresh token');
-            }
-        } else {
-            console.error('Refresh token expired or not available');
-            throw new Error('Refresh token expired or not available');
-        }
+export function signature(req, res) {
+    const url = req.body?.url || undefined;
+    if (!url) {
+        return res.status(400).json({ error: 'URL is required' });
     }
+
+    const jsapi_ticket = req.session.jsapi_ticket;
+    const data = sign_jsapi_ticket(jsapi_ticket, url);
+
+    // Send a secure response to the client without sensitive data
+    res.status(200).json({
+        message: 'Signature generated successfully',
+        data: data,
+    });
 }
